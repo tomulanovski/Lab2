@@ -2,12 +2,40 @@
 #include "LineParser.c"
 #include <linux/limits.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 void execute(cmdLine *pCmdLine) {
-    if (execvp(pCmdLine->arguments[0], pCmdLine->arguments) == -1) {
-        perror("Error in execv");
-        exit(1);
+
+    if (strcmp(pCmdLine->arguments[0], "cd") == 0) {
+        // Handle 'cd' command
+        if (chdir(pCmdLine->arguments[1]) == -1) {
+            perror("Error in chdir");
+        }
+        return;
     }
+
+    pid_t PID = fork();
+    if (PID==0) {
+        if (execvp(pCmdLine->arguments[0], pCmdLine->arguments) == -1){
+            perror("Error in execv");
+            exit(1);
+        }
+    }
+
+    else if (PID > 0) {
+        fprintf(stderr, "PID: %d\n", PID);
+        fprintf(stderr, "Executing command: %s\n", pCmdLine->arguments[0]);
+
+        if(pCmdLine->blocking) {
+            int status;
+            waitpid(PID, &status, 0);
+        }
+    }
+    else {
+            perror("Error in fork");
+            exit(1);
+        }
+
 }
 
 int main() {
@@ -31,8 +59,16 @@ int main() {
             exit(1);
         }
         cmdLine *lineFromInput = parseCmdLines(input);
-        execute(lineFromInput);
-        freeCmdLines(lineFromInput);
+
+        if (strcmp(lineFromInput->arguments[0], "cd") == 0) {
+            if (chdir(lineFromInput->arguments[1]) == -1) {
+                perror("Error in chdir");
+            }
+        }
+        else {
+            execute(lineFromInput);
+            freeCmdLines(lineFromInput);
+        }
 
     }
     return 0;
