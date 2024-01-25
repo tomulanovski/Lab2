@@ -3,6 +3,7 @@
 #include <linux/limits.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 
 void execute(cmdLine *pCmdLine) {
 
@@ -16,7 +17,27 @@ void execute(cmdLine *pCmdLine) {
 
     pid_t PID = fork();
     if (PID==0) {
-        if (execvp(pCmdLine->arguments[0], pCmdLine->arguments) == -1){
+    
+        if (pCmdLine->inputRedirect) {
+        int inputFile = open(pCmdLine->inputRedirect, O_RDONLY);
+        if (inputFile == -1) {
+            perror("Error in open for input");
+            exit(1);
+        }
+        
+        dup2(inputFile,STDIN_FILENO);
+    }
+     if (pCmdLine->outputRedirect) {
+        int outputFile = open(pCmdLine->outputRedirect, O_WRONLY);
+        if (outputFile == -1) {
+            perror("Error in open for output");
+            exit(1);
+        }
+        
+        dup2(outputFile,STDOUT_FILENO);
+        
+    }
+     if (execvp(pCmdLine->arguments[0], pCmdLine->arguments) == -1){
             perror("Error in execv");
             exit(1);
         }
@@ -37,6 +58,7 @@ void execute(cmdLine *pCmdLine) {
         }
 
 }
+
 
 int main() {
     while(1) {
@@ -73,6 +95,9 @@ int main() {
     }
     return 0;
 }
+
+
+
 
 
 
