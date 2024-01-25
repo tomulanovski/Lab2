@@ -14,6 +14,24 @@ void execute(cmdLine *pCmdLine) {
         }
         return;
     }
+        if (strcmp(pCmdLine->arguments[0], "wakeup") == 0) {
+        // Handle 'wakeup' command
+        pid_t pid = atoi(pCmdLine->arguments[1]);
+        if (kill(pid, SIGCONT) == -1) {
+            perror("Error in wakeup");
+        }
+        return;
+    }
+
+    if (strcmp(pCmdLine->arguments[0], "nuke") == 0) {
+        // Handle 'nuke' command
+        pid_t pid = atoi(pCmdLine->arguments[1]);
+        if (kill(pid, SIGTSTP) == -1) {
+            perror("Error in nuke");
+        }
+        
+        return;
+    }
 
     pid_t PID = fork();
     if (PID==0) {
@@ -24,7 +42,7 @@ void execute(cmdLine *pCmdLine) {
             perror("Error in open for input");
             exit(1);
         }
-        
+
         dup2(inputFile,STDIN_FILENO);
     }
      if (pCmdLine->outputRedirect) {
@@ -95,6 +113,8 @@ int main() {
     }
     return 0;
 }
+
+
 
 
 
