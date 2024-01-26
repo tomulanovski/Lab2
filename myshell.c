@@ -69,6 +69,7 @@ void execute(cmdLine *pCmdLine) {
             int status;
             waitpid(PID, &status, 0);
         }
+
     }
     else {
             perror("Error in fork");
@@ -113,10 +114,6 @@ int main() {
     }
     return 0;
 }
-
-
-
-
 
 
 
